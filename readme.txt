@@ -21,6 +21,8 @@ RSS Antennaは、他のWebサイトの更新情報をRSSから取得し更新日
 * 記事の抜粋、画像のサムネイルを表示することができます。
 * 広告記事を表示しない機能があります。
 
+詳細な使用方法はこちらです: http://residentbird.main.jp/bizplugin/plugins/rss-antenna/
+
 == Installation ==
 
 1. Upload `plugin-name.zip` to the `/wp-content/plugins/` directory
