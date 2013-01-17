@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.4.0
+Version: 1.4.1
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -281,10 +281,6 @@ class RssItem{
 
 
 	private function get_img($content) {
-		if ( !is_array(gd_info())){
-			return null;
-		}
-
 		$cache_img = $this->get_image_cache($this->url);
 		if ( isset($cache_img) ){
 			return "<img src='{$cache_img}'>";
@@ -312,7 +308,6 @@ class RssItem{
 		if ( !isset($feed_img)){
 			return "";
 		}
-
 		return "<img src='{$feed_img}'>";
 	}
 
@@ -328,11 +323,9 @@ class RssItem{
 			$this->remove_cache_map($options);
 			return null;
 		}
-
 		if( isset( $options["cache_map"][$key] ) ){
 			return $options["cache_map"][$key];
 		}
-
 		return null;
 	}
 
@@ -353,18 +346,8 @@ class RssItem{
 		return $img_url;
 	}
 
-	private function save_image_file($file_path){
-		$img_type = exif_imagetype($file_path);
-
-		if ( $img_type == IMAGETYPE_JPEG){
-			$image = @ImageCreateFromJPEG($file_path);
-		}
-		else if ( $img_type == IMAGETYPE_PNG){
-			$image = @ImageCreateFromPng($file_path);
-		}
-		else{
-			return null;
-		}
+	private function save_image_file($file_url){
+		$image = file_get_contents($file_url);
 
 		if ( !$image ){
 			return null;
@@ -377,15 +360,7 @@ class RssItem{
 		if (!file_exists($upload_dir)){
 			mkdir($upload_dir);
 		}
-
-		$result = ( $img_type == IMAGETYPE_JPEG) ? ImageJPEG($image, $upload_dir.$filename) : ImagePNG($image, $upload_dir.$filename);
-
-		if ( !$result ){
-			Imagedestroy($image);
-			return null;
-		}
-
-		ImageDestroy($image);
+		file_put_contents($upload_dir.$filename,$image);
 		return $upload_url;
 	}
 
