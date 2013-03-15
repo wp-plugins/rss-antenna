@@ -2,6 +2,7 @@
 
 div.rss-antenna {
 	margin: 10px 0;
+	overflow: hidden;
 }
 
 div.rss-antenna p.title {
