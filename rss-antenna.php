@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.4.1
+Version: 1.5.0
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -27,7 +27,7 @@ class RssAntennaPlugin{
 
 		add_action( 'admin_init', array(&$this,'on_admin_init') );	//管理画面の初期化
 		add_action( 'admin_menu', array(&$this, 'on_admin_menu'));			//管理画面にメニューを追加
-		add_action('wp_print_styles', array(&$this,'on_print_styles'));				//cssの設定（管理画面以外)
+		add_action( 'wp_enqueue_scripts', array(&$this,'on_enqueue_scripts'));				//cssの設定（管理画面以外)
 		add_shortcode(self::SHORTCODE, array(&$this,'show_shortcode')); 		//ショートコードの設定
 		add_filter('widget_text', 'do_shortcode');
 	}
@@ -63,7 +63,7 @@ class RssAntennaPlugin{
 		wp_register_style( 'rss-antenna-style', plugins_url('rss-antenna.css', __FILE__) );
 	}
 
-	function on_print_styles() {
+	function on_enqueue_scripts() {
 		$cssPath = WP_PLUGIN_DIR . self::PLUGIN_DIR . self::CSS_FILE;
 		$this->aaa = $cssPath;
 		if(file_exists($cssPath)){
@@ -191,7 +191,13 @@ class RssInfo{
 		$rss_items = $rss->get_items(0, $maxitems);
 		date_default_timezone_set('Asia/Tokyo');
 
+		$duplicate = array();
 		foreach($rss_items as $item){
+			$url = esc_url($item->get_permalink());
+			if ( empty($url) || $duplicate[$url] == true ){
+				continue;
+			}
+			$duplicate[$url] = true;
 			if ( isset($this->setting["adblock"]) && $this->isAd($item->get_title() ) ){
 				continue;
 			}
@@ -306,7 +312,7 @@ class RssItem{
 
 		$feed_img = $this->update_image_cache($this->url, $feed_img);
 		if ( !isset($feed_img)){
-			return "";
+			return null;
 		}
 		return "<img src='{$feed_img}'>";
 	}
@@ -347,7 +353,7 @@ class RssItem{
 	}
 
 	private function save_image_file($file_url){
-		$image = file_get_contents($file_url);
+		$image = $this->get_image_file($file_url);
 
 		if ( !$image ){
 			return null;
@@ -362,6 +368,22 @@ class RssItem{
 		}
 		file_put_contents($upload_dir.$filename,$image);
 		return $upload_url;
+	}
+
+	function get_image_file($url) {
+		$img = @file_get_contents( $url, false,
+				stream_context_create(array(
+						'http' => array(
+								'method'  => 'GET',
+								'timeout'=>3.0
+						)
+				))
+		);
+
+		if($img === FALSE){
+			return null;
+		}
+		return $img;
 	}
 
 	function remove_cache_map($options) {
