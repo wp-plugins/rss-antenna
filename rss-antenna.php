@@ -3,32 +3,32 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.5.0
+Version: 1.5.1
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
 
 
-$rssAntennaPlugin = new RssAntennaPlugin();
+new RssAntennaPlugin();
 
 /**
  * プラグイン本体
  */
 class RssAntennaPlugin{
 
-	const SHORTCODE = "showrss";  //ショートコード
-	const OPTION_NAME = "rss_antenna_options"; //オプション設定値
-	const PLUGIN_DIR = '/rss-antenna/'; //プラグインのディレクトリ名
-	const CSS_FILE = 'rss-antenna.css'; //cssファイル名
+	const SHORTCODE = "showrss";
+	const OPTION_NAME = "rss_antenna_options";
+	const PLUGIN_DIR = '/rss-antenna/';
+	const CSS_FILE = 'rss-antenna.css';
 
 	public function __construct(){
-		register_activation_hook(__FILE__, array(&$this,'on_activation'));	//プラグイン有効時の処理を設定
+		register_activation_hook(__FILE__, array(&$this,'on_activation'));
 		register_deactivation_hook(__FILE__, array(&$this,'on_deactivation'));
 
-		add_action( 'admin_init', array(&$this,'on_admin_init') );	//管理画面の初期化
-		add_action( 'admin_menu', array(&$this, 'on_admin_menu'));			//管理画面にメニューを追加
-		add_action( 'wp_enqueue_scripts', array(&$this,'on_enqueue_scripts'));				//cssの設定（管理画面以外)
-		add_shortcode(self::SHORTCODE, array(&$this,'show_shortcode')); 		//ショートコードの設定
+		add_action( 'admin_init', array(&$this,'on_admin_init') );
+		add_action( 'admin_menu', array(&$this, 'on_admin_menu'));
+		add_action( 'wp_enqueue_scripts', array(&$this,'on_enqueue_scripts'));
+		add_shortcode(self::SHORTCODE, array(&$this,'show_shortcode'));
 		add_filter('widget_text', 'do_shortcode');
 	}
 
@@ -67,17 +67,14 @@ class RssAntennaPlugin{
 		$cssPath = WP_PLUGIN_DIR . self::PLUGIN_DIR . self::CSS_FILE;
 		$this->aaa = $cssPath;
 		if(file_exists($cssPath)){
-			/* CSSの格納URL */
 			$cssUrl = plugins_url('rss-antenna.css', __FILE__);
-			/* CSS登録 */
 			wp_register_style('rss-antenna-style', $cssUrl);
-			/* CSS追加 */
 			wp_enqueue_style('rss-antenna-style');
 		}
 	}
 
 	public function on_admin_menu() {
-		$page = add_options_page("RSS Antenna設定", "RSS Antenna設定", 'administrator', __FILE__, array(&$this, 'show_admin_page'));
+		add_options_page("RSS Antenna設定", "RSS Antenna設定", 'administrator', __FILE__, array(&$this, 'show_admin_page'));
 	}
 
 	public function show_admin_page() {
@@ -101,7 +98,6 @@ class RssAntennaPlugin{
 		return $contents;
 	}
 
-	// Section HTML, displayed before the first option
 	function  section_text_fn() {
 		//echo '<p>Below are some examples of different option controls.</p>';
 	}
@@ -281,40 +277,23 @@ class RssItem{
 		if ( !isset( $options["image"])  ){
 			return;
 		}
-		$this->img_tag = $this->get_img($feed->get_content());
+		$this->img_tag = $this->get_image_tag($feed->get_content());
 	}
 
-
-
-	private function get_img($content) {
-		$cache_img = $this->get_image_cache($this->url);
-		if ( isset($cache_img) ){
-			return "<img src='{$cache_img}'>";
+	private function get_image_tag($content) {
+		$cache_img_url = $this->get_image_cache($this->url);
+		if ( isset($cache_img_url) ){
+			return "<img src='{$cache_img_url}'  alt=''>";
 		}
 
-		$searchPattern = '/<img.+?src=[\'"]([^\'"]+?)[\'"].*?>/msi';
-		if ( preg_match_all( $searchPattern, $content, $matches ) ) {
-			$feed_imgs = $matches[1];
-		}
-		if ( empty($feed_imgs)){
+		$img_file = $this->get_image_file($content);
+		if ( empty($img_file)){
 			return null;
 		}
 
-		foreach ( $feed_imgs as $img){
-			if ( !$this->isIcon($img) ){
-				$feed_img = $img;
-				break;
-			}
-		}
-		if ( empty($feed_img) ){
-			return null;
-		}
-
-		$feed_img = $this->update_image_cache($this->url, $feed_img);
-		if ( !isset($feed_img)){
-			return null;
-		}
-		return "<img src='{$feed_img}'>";
+		$local_img_url = $this->save_image_file($img_file);
+		$this->update_image_cache($this->url, $local_img_url);
+		return "<img src='{$local_img_url}' alt=''>";
 	}
 
 	private function get_image_cache($key){
@@ -335,11 +314,29 @@ class RssItem{
 		return null;
 	}
 
-	private function update_image_cache($url, $img){
+	private function get_image_file($content) {
+		$searchPattern = '/<img.+?src=[\'"]([^\'"]+?)[\'"].*?>/msi';
+		if ( preg_match_all( $searchPattern, $content, $matches ) ) {
+			$feed_img_urls = $matches[1];
+		}
+		if ( empty($feed_img_urls)){
+			return null;
+		}
 
+		foreach ( $feed_img_urls as $feed_img_url){
+			$response = wp_remote_get($feed_img_url, array( 'timeout' => 3 ));
+			if( is_wp_error( $response ) ) {
+				return;
+			}
+			if ( isset($response[body]) && $this->isIcon($response[body]) == false){
+				return $response[body];
+			}
+		}
+		return null;
+	}
+
+	private function update_image_cache($url, $img_url){
 		$options = get_option(RssAntennaPlugin::OPTION_NAME);
-		$img_url = $this->save_image_file($img);
-
 		$map = $options["cache_map"];
 		if ( !is_array($map) ){
 			$map = array();
@@ -348,21 +345,13 @@ class RssItem{
 		$options["cache_map"] = $map;
 		$options["cache_date"] = date( "Y/m/d", time());
 		update_option(RssAntennaPlugin::OPTION_NAME, $options);
-
-		return $img_url;
 	}
 
-	private function save_image_file($file_url){
-		$image = $this->get_image_file($file_url);
-
-		if ( !$image ){
-			return null;
-		}
+	private function save_image_file($image){
 		$filename = uniqid();
 		$upload_array = wp_upload_dir();
 		$upload_dir = $upload_array["basedir"]. "/rsscache/";
 		$upload_url = $upload_array["baseurl"]. "/rsscache/". $filename;
-
 		if (!file_exists($upload_dir)){
 			mkdir($upload_dir);
 		}
@@ -370,21 +359,6 @@ class RssItem{
 		return $upload_url;
 	}
 
-	function get_image_file($url) {
-		$img = @file_get_contents( $url, false,
-				stream_context_create(array(
-						'http' => array(
-								'method'  => 'GET',
-								'timeout'=>3.0
-						)
-				))
-		);
-
-		if($img === FALSE){
-			return null;
-		}
-		return $img;
-	}
 
 	function remove_cache_map($options) {
 		$options["cache_map"] = "";
@@ -402,8 +376,11 @@ class RssItem{
 	}
 
 	const MIN_SIZE = "40";
-	private function isIcon($img) {
-		list($width, $height) = @getimagesize($img);
+	private function isIcon($data) {
+		$img = base64_encode($data);
+		$scheme = 'data:application/octet-stream;base64,';
+		list($width, $height)  = getimagesize($scheme . $img);
+
 		if( $width <= self::MIN_SIZE || $height <= self::MIN_SIZE ){
 			return true;
 		}
