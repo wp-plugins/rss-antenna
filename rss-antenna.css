@@ -1,8 +1,7 @@
-@CHARSET "UTF-8";
-
 div.rss-antenna {
 	margin: 10px 0;
 	overflow: hidden;
+	word-break:break-all;
 }
 
 div.rss-antenna p.title {
