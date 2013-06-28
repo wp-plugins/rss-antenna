@@ -3,11 +3,15 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.5.1
+Version: 1.6.0
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
 
+
+if ( !class_exists( 'RssImage' ) ) {
+	include_once( dirname(__FILE__) . "/class.image.php" );
+}
 
 new RssAntennaPlugin();
 
@@ -81,13 +85,13 @@ class RssAntennaPlugin{
 		$file = __FILE__;
 		$option_name = self::OPTION_NAME;
 		$shortcode = "[" . self::SHORTCODE . "]";
-		include_once('admin-view.php');
+		include_once( dirname(__FILE__) . '/admin-view.php');
 	}
 
 	function show_rss_antenna(){
 
 		$info = new RssInfo(self::OPTION_NAME);
-		include('rss-antenna-view.php');
+		include( dirname(__FILE__) . '/rss-antenna-view.php');
 	}
 
 	function show_shortcode(){
@@ -190,7 +194,7 @@ class RssInfo{
 		$duplicate = array();
 		foreach($rss_items as $item){
 			$url = esc_url($item->get_permalink());
-			if ( empty($url) || $duplicate[$url] == true ){
+			if ( empty($url) || isset( $duplicate[$url] ) ){
 				continue;
 			}
 			$duplicate[$url] = true;
@@ -328,8 +332,8 @@ class RssItem{
 			if( is_wp_error( $response ) ) {
 				return;
 			}
-			if ( isset($response[body]) && $this->isIcon($response[body]) == false){
-				return $response[body];
+			if ( isset($response['body']) && $this->isIcon($response['body']) == false){
+				return $response['body'];
 			}
 		}
 		return null;
@@ -337,10 +341,7 @@ class RssItem{
 
 	private function update_image_cache($url, $img_url){
 		$options = get_option(RssAntennaPlugin::OPTION_NAME);
-		$map = $options["cache_map"];
-		if ( !is_array($map) ){
-			$map = array();
-		}
+		$map = isset( $options["cache_map"] ) ? $options["cache_map"] : array();
 		$map[$url] = $img_url;
 		$options["cache_map"] = $map;
 		$options["cache_date"] = date( "Y/m/d", time());
@@ -356,9 +357,21 @@ class RssItem{
 			mkdir($upload_dir);
 		}
 		file_put_contents($upload_dir.$filename,$image);
+		$this->resize($upload_dir.$filename);
 		return $upload_url;
 	}
 
+	private function resize( $path ){
+		if ( !function_exists("imagecreatefromjpeg")){
+			return;
+		}
+		$thumb = new RssImage( $path );
+		if ( $thumb->image_width <= 150 ){
+			return;
+		}
+		$thumb->width( 120 );
+		$thumb->save();
+	}
 
 	function remove_cache_map($options) {
 		$options["cache_map"] = "";
