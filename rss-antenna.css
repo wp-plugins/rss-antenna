@@ -1,8 +1,7 @@
-@CHARSET "UTF-8";
-
 div.rss-antenna {
 	margin: 10px 0;
 	overflow: hidden;
+	word-break:break-all;
 }
 
 div.rss-antenna p.title {
@@ -32,8 +31,8 @@ div.rss-antenna span.sitename {
 }
 
 div.rss-antenna img {
-	max-width: 28%;
-	max-height: 120px;
+	max-width: 22%;
+	max-height: 100px;
 	float: right;
 	margin: 5px 0;
 }
@@ -44,7 +43,7 @@ div.rss-antenna p.description {
 	line-height: 1.2;
 	font-size: 90%;
 	color: Gray;
-	width: 70%;
+	width: 77%;
 	float: left;
 }
 
