@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.6.0
+Version: 1.7.0
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -14,6 +14,53 @@ if ( !class_exists( 'RssImage' ) ) {
 }
 
 new RssAntennaPlugin();
+
+class RA{
+	public static function remove_cache_map($options) {
+		$options["cache_map"] = "";
+		$options["cache_date"] = "";
+		update_option(RssAntennaPlugin::OPTION_NAME, $options);
+	}
+
+	public static function create_cache_dir(){
+		$upload_dir = self::get_upload_dir();
+		if (!file_exists($upload_dir)){
+			mkdir($upload_dir);
+		}
+	}
+
+	public static function get_upload_dir(){
+		$upload_array = wp_upload_dir();
+		return $upload_array["basedir"]. "/rsscache/";
+	}
+
+	public static function get_upload_url( $filename ){
+		$upload_array = wp_upload_dir();
+		return $upload_array["baseurl"]. "/rsscache/". $filename;
+	}
+
+	public static function delete_cache_dir(){
+		$path = self::get_upload_dir();
+		self::remove_dir($path);
+		if(is_dir($path)){
+			rmdir($path);
+		}
+	}
+
+	public static function clear_cache_files(){
+		$path = self::get_upload_dir();
+		self::remove_dir($path);
+	}
+
+	private static function remove_dir($dir) {
+		foreach(glob($dir . '/*') as $file) {
+			if(is_dir($file))
+				self::remove_dir($file);
+			else
+				unlink($file);
+		}
+	}
+}
 
 /**
  * プラグイン本体
@@ -37,6 +84,7 @@ class RssAntennaPlugin{
 	}
 
 	function on_activation() {
+		RA::create_cache_dir();
 		$tmp = get_option(self::OPTION_NAME);
 		if(!is_array($tmp)) {
 			$arr = array(
@@ -45,14 +93,18 @@ class RssAntennaPlugin{
 					"adblock" => "on",
 					"description" => "on",
 					"image" => "on",
+					"image_position" => "右",
 			);
 			update_option(self::OPTION_NAME, $arr);
 		}
 	}
 
 	function on_deactivation(){
+		$options = get_option(self::OPTION_NAME);
+		RA::remove_cache_map($options);
 		unregister_setting(self::OPTION_NAME, self::OPTION_NAME );
 		wp_deregister_style('rss-antenna-style');
+		RA::delete_cache_dir();
 	}
 
 
@@ -63,6 +115,7 @@ class RssAntennaPlugin{
 		add_settings_field('rss_number', '表示件数', array(&$this,'setting_number'), __FILE__, 'main_section');
 		add_settings_field('id_description', '記事の抜粋を表示する', array(&$this,'setting_description_chk'), __FILE__, 'main_section');
 		add_settings_field('id_image', '　サムネイル画像を表示する', array(&$this,'setting_image_chk'), __FILE__, 'main_section');
+		add_settings_field('id_image_position', '　サムネイル画像表示位置', array(&$this,'setting_image_position'), __FILE__, 'main_section');
 		add_settings_field('id_adblock', '広告を表示しない', array(&$this,'setting_adblock_chk'), __FILE__, 'main_section');
 		wp_register_style( 'rss-antenna-style', plugins_url('rss-antenna.css', __FILE__) );
 	}
@@ -133,12 +186,24 @@ class RssAntennaPlugin{
 		$options = get_option(self::OPTION_NAME);
 		$checked = (isset($options[$id]) && $options[$id]) ? $checked = ' checked="checked" ': "";
 		$name = self::OPTION_NAME. "[$id]";
-
 		echo "<input ".$checked." id='id_".$id."' name='".$name."' type='checkbox' />";
 	}
 
 	function setting_feeds() {
 		$this->setting_textarea("feeds");
+	}
+
+	function setting_image_position() {
+		$options = get_option(self::OPTION_NAME);
+		$name = "image_position";
+		$value = empty( $options[ $name ] ) ? "右" : $options[ $name ];
+		$items = array("右", "左");
+		echo "<select id='{$name}' name='rss_antenna_options[{$name}]'>";
+		foreach($items as $item) {
+			$selected = ( $value == $item) ? 'selected="selected"' : '';
+			echo "<option value='$item' $selected>$item</option>";
+		}
+		echo "</select>";
 	}
 
 	function setting_textarea( $name ) {
@@ -154,6 +219,8 @@ class RssAntennaPlugin{
  */
 class RssInfo{
 	var $setting;
+	var $image_position;
+	var $description_position;
 	var $items = array();
 	const MAX_FEED = 10;
 	const CATCH_TIME = 3600; //1時間
@@ -161,6 +228,8 @@ class RssInfo{
 	public function __construct($option_name){
 		$this->setting = get_option($option_name);
 		$this->createItems();
+		$this->image_position = (empty($this->setting['image_position']) || $this->setting['image_position'] == "右")? "right" : "left";
+		$this->description_position = $this->image_position == "right" ? "left" : "right";
 	}
 
 	const USER_AGENT = 'SIMPLEPIE_USERAGENT';
@@ -262,7 +331,7 @@ class RssItem{
 	var $url;
 	var $site_name;
 	var $description;
-	var $img_tag;
+	var $img_src;
 	const DESCRIPTION_SIZE = 400;
 
 	public function __construct( $feed ){
@@ -281,13 +350,13 @@ class RssItem{
 		if ( !isset( $options["image"])  ){
 			return;
 		}
-		$this->img_tag = $this->get_image_tag($feed->get_content());
+		$this->img_src = $this->get_image_src($feed->get_content());
 	}
 
-	private function get_image_tag($content) {
+	private function get_image_src($content) {
 		$cache_img_url = $this->get_image_cache($this->url);
 		if ( isset($cache_img_url) ){
-			return "<img src='{$cache_img_url}'  alt=''>";
+			return $cache_img_url;
 		}
 
 		$img_file = $this->get_image_file($content);
@@ -297,7 +366,7 @@ class RssItem{
 
 		$local_img_url = $this->save_image_file($img_file);
 		$this->update_image_cache($this->url, $local_img_url);
-		return "<img src='{$local_img_url}' alt=''>";
+		return $local_img_url;
 	}
 
 	private function get_image_cache($key){
@@ -305,11 +374,9 @@ class RssItem{
 		if ( !isset( $options["cache_map"]) || !isset($options["cache_date"]) ){
 			return null;
 		}
-		$upload_array = wp_upload_dir();
-		$cachePath = $upload_array["basedir"] . "/rsscache/";
 		if ( $options["cache_date"] != date( "Y/m/d", time()) ){
-			$this->remove_dir($cachePath);
-			$this->remove_cache_map($options);
+			RA::clear_cache_files();
+			RA::remove_cache_map($options);
 			return null;
 		}
 		if( isset( $options["cache_map"][$key] ) ){
@@ -350,14 +417,10 @@ class RssItem{
 
 	private function save_image_file($image){
 		$filename = uniqid();
-		$upload_array = wp_upload_dir();
-		$upload_dir = $upload_array["basedir"]. "/rsscache/";
-		$upload_url = $upload_array["baseurl"]. "/rsscache/". $filename;
-		if (!file_exists($upload_dir)){
-			mkdir($upload_dir);
-		}
+		$upload_dir = RA::get_upload_dir();
 		file_put_contents($upload_dir.$filename,$image);
 		$this->resize($upload_dir.$filename);
+		$upload_url = RA::get_upload_url($filename);
 		return $upload_url;
 	}
 
@@ -371,21 +434,6 @@ class RssItem{
 		}
 		$thumb->width( 120 );
 		$thumb->save();
-	}
-
-	function remove_cache_map($options) {
-		$options["cache_map"] = "";
-		$options["cache_date"] = "";
-		update_option(RssAntennaPlugin::OPTION_NAME, $options);
-	}
-
-	function remove_dir($dir) {
-		foreach(glob($dir . '/*') as $file) {
-			if(is_dir($file))
-				$this->remove_dir($file);
-			else
-				unlink($file);
-		}
 	}
 
 	const MIN_SIZE = "40";

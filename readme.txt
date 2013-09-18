@@ -3,8 +3,8 @@ Contributors: WordPress BizPlugin
 Donate link:
 Tags: rss
 Requires at least: 3.4
-Tested up to: 3.5
-Stable tag: 1.6.0
+Tested up to: 3.6.1
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,9 +35,13 @@ RSS Antennaは、他のWebサイトの更新情報をRSSから取得し更新日
 
 == Changelog ==
 
+= 1.7.0 =
+* サムネイル画像の表示位置を設定する機能を追加しました
+* 記事へのリンクの選択範囲を拡大しました
+
 = 1.6.0 =
-* サムネイル画像取得時に画像サイズをリサイズ（縮小）する機能を追加
-* サムネイル画像の表示サイズを変更
+* サムネイル画像取得時に画像サイズをリサイズ（縮小）する機能を追加しました
+* サムネイル画像の表示サイズを変更しました
 
 = 1.5.1 =
 * サムネイル画像の表示速度を高速化しました

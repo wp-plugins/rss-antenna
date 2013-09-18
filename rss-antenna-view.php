@@ -1,32 +1,25 @@
 <div class='rss-antenna'>
 	<?php foreach($info->items as $item): ?>
-	<p class='title'>
-		<a href="<?php echo $item->url; ?>" target="_blank"><?php echo $item->title; ?>
-		</a>
-	</p>
-	<p class='info'>
-		<span class='sitename'>[<?php echo $item->site_name; ?>]
-		</span><span class='date'><?php echo $item->date; ?> </span>
-	</p>
-
-	<?php if( empty($item->description) ): ?>
-	<p class='description-only'>
-		<?php echo $item->description; ?>
-	</p>
-
-	<?php elseif (!empty($item->img_tag)): ?>
-	<p class='description'>
-		<?php echo $item->description; ?>
-		<a href="<?php echo $item->url; ?>" target="_blank"> 続きを読む</a>
-	</p>
-	<?php echo $item->img_tag; ?>
-
-	<?php else: ?>
-	<p class='description-only'>
-		<?php echo $item->description; ?>
-		<a href="<?php echo $item->url; ?>" target="_blank"> 続きを読む</a>
-	</p>
-	<?php endif; ?>
-	<hr>
+	<div class='rss-item'>
+	<a href="<?php echo $item->url; ?>" target="_blank">
+		<p class='title'>
+			<?php echo $item->title; ?>
+		</p>
+		<p class='info'>
+			<span class='sitename'>[<?php echo $item->site_name; ?>] <?php echo $item->date; ?></span>
+		</p>
+		<?php if( !empty($item->description) && !empty($item->img_src) ): ?>
+			<p class='description <?php echo $info->description_position ?>'>
+				<?php echo $item->description; ?>
+			</p>
+			<img class='<?php echo $info->image_position;?>' src='<?php echo $item->img_src;?>'  alt=''>
+		<?php else: ?>
+			<p class='description-only'>
+				<?php echo $item->description; ?>
+			</p>
+		<?php endif; ?>
+		<hr>
+	</a>
+	</div>
 	<?php endforeach; ?>
 </div>
