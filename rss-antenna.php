@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.7.0
+Version: 1.7.1
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -374,7 +374,7 @@ class RssItem{
 		if ( !isset( $options["cache_map"]) || !isset($options["cache_date"]) ){
 			return null;
 		}
-		if ( $options["cache_date"] != date( "Y/m/d", time()) ){
+		if ( $options["cache_date"] != date_i18n( "Y/m/d") ){
 			RA::clear_cache_files();
 			RA::remove_cache_map($options);
 			return null;
@@ -411,11 +411,12 @@ class RssItem{
 		$map = isset( $options["cache_map"] ) ? $options["cache_map"] : array();
 		$map[$url] = $img_url;
 		$options["cache_map"] = $map;
-		$options["cache_date"] = date( "Y/m/d", time());
+		$options["cache_date"] = date_i18n( "Y/m/d");
 		update_option(RssAntennaPlugin::OPTION_NAME, $options);
 	}
 
 	private function save_image_file($image){
+		RA::create_cache_dir();
 		$filename = uniqid();
 		$upload_dir = RA::get_upload_dir();
 		file_put_contents($upload_dir.$filename,$image);

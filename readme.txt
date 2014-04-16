@@ -2,9 +2,9 @@
 Contributors: WordPress BizPlugin
 Donate link:
 Tags: rss
-Requires at least: 3.4
-Tested up to: 3.6.1
-Stable tag: 1.7.0
+Requires at least: 3.5
+Tested up to: 3.8.3
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,9 @@ RSS Antennaは、他のWebサイトの更新情報をRSSから取得し更新日
 2. Admin page
 
 == Changelog ==
+
+= 1.7.1 =
+* マルチサイトに対応しました
 
 = 1.7.0 =
 * サムネイル画像の表示位置を設定する機能を追加しました
