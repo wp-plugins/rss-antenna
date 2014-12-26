@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.7.2
+Version: 1.7.3
 Author:WordPress Biz Plugin
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -311,9 +311,9 @@ class RssInfo{
 	}
 
 	private function isAd($title){
-		$adtags = array("AD:", "PR:", "\[PR\]", "\[AD\]");
+		$adtags = array("AD:", "PR:", ": PR", "\[PR\]", "\[AD\]");
 		foreach( $adtags as $tag){
-			$pattern = "/^{$tag}/";
+			$pattern = "/^{$tag}|{$tag}$/";
 			if ( preg_match($pattern, $title) == 1 ){
 				return true;
 			}
