@@ -1,12 +1,21 @@
-@CHARSET "UTF-8";
-
 div.rss-antenna {
 	margin: 10px 0;
 	overflow: hidden;
+	word-break:break-all;
+}
+
+div.rss-antenna div.rss-item a{
+	text-decoration: none;
+	display: block;
+}
+
+div.rss-antenna div.rss-item :hover {
+    background-color:#eef3fd;
 }
 
 div.rss-antenna p.title {
-	margin: 3px 0;
+	margin: 0;
+	padding: 5px 2px 0;
 	line-height: 1.2;
 }
 
@@ -19,23 +28,14 @@ div.rss-antenna p.info {
 	color: #a9a9a9;
 }
 
-div.rss-antenna span.date {
-	background-color: #f5f5f5;
-	padding: 1px 5px;
-	border-radius: 3px; /* CSS3 */
-	-webkit-border-radius: 3px; /* Safari,Google Chrome */
-	-moz-border-radius: 3px; /* Firefox */
-}
-
 div.rss-antenna span.sitename {
-	margin: 0 5px;
+	margin: 0;
 }
 
 div.rss-antenna img {
-	max-width: 28%;
-	max-height: 120px;
-	float: right;
-	margin: 5px 0;
+	max-width: 22%;
+	max-height: 100px;
+	margin: 2px 0;
 }
 
 div.rss-antenna p.description {
@@ -44,7 +44,14 @@ div.rss-antenna p.description {
 	line-height: 1.2;
 	font-size: 90%;
 	color: Gray;
-	width: 70%;
+	width: 77%;
+}
+
+div.rss-antenna .right {
+	float: right;
+}
+
+div.rss-antenna .left {
 	float: left;
 }
 
@@ -57,7 +64,7 @@ div.rss-antenna p.description-only {
 }
 
 div.rss-antenna hr {
-	margin: 7px 0;
+	margin: 0;
 	clear:both;
 }
 
