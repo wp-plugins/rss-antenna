@@ -9,7 +9,7 @@ class RssImage {
 	var $height;
 	var $ext = "";
 	var $types = array('','gif','jpeg','png','swf');
-	var $quality = 80;
+	var $quality = 100;
 	var $top = 0;
 	var $left = 0;
 	var $crop = false;
