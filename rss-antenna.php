@@ -3,7 +3,7 @@
  Plugin Name: RSS Antenna
 Plugin URI: http://residentbird.main.jp/bizplugin/
 Description: Webサイトの更新情報をRSSから取得し更新日時の新しい順に一覧表示するプラグインです。
-Version: 1.8.0
+Version: 1.9.0
 Author:Hideki Tanaka
 Author URI: http://residentbird.main.jp/bizplugin/
 */
@@ -161,7 +161,7 @@ class RssAntennaPlugin{
 
 	function  setting_number() {
 		$options = get_option(self::OPTION_NAME);
-		$items = array("5", "10", "15", "20","25", "30");
+		$items = array("1", "3", "5", "10", "15", "20","25", "30");
 		echo "<select id='rss_number' name='rss_antenna_options[feed_count]'>";
 		foreach($items as $item) {
 			$selected = ($options['feed_count']==$item) ? 'selected="selected"' : '';
@@ -335,7 +335,7 @@ class RssItem{
 	var $site_name;
 	var $description;
 	var $img_src;
-	const DESCRIPTION_SIZE = 400;
+	const DESCRIPTION_SIZE = 150;
 
 	public function __construct( $feed ){
 		$this->date = $feed->get_date("Y/m/d H:i");
@@ -348,12 +348,23 @@ class RssItem{
 		if ( !isset( $options["description"])  ){
 			return;
 		}
-		$text = strip_tags ($feed->get_content());
+		$text = $this->remove_tag($feed->get_content());
 		$this->description = mb_strimwidth( $text, 0, self::DESCRIPTION_SIZE,"…");
 		if ( !isset( $options["image"])  ){
 			return;
 		}
 		$this->img_src = $this->get_image_src($feed->get_content());
+	}
+
+	private function remove_tag($content) {
+		$pattern = '{<p class="wp-caption-text".*?</p>}s';
+		$content = preg_replace($pattern, "", $content);
+		$pattern = '{\[caption.*?/caption\]}s';
+		$content = preg_replace($pattern, "", $content);
+		$pattern = '{<figcaption.*?</figcaption>}s';
+		$content = preg_replace($pattern, "", $content);
+		$content = strip_tags($content);
+		return $content;
 	}
 
 	private function get_image_src($content) {

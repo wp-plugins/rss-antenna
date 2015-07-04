@@ -3,8 +3,8 @@ Contributors: WP-BizPlugin
 Donate link:
 Tags: rss
 Requires at least: 3.5
-Tested up to: 4.1
-Stable tag: 1.8.0
+Tested up to: 4.2
+Stable tag: 1.9.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,10 @@ RSS Antennaは、他のWebサイトの更新情報をRSSから取得し更新日
 2. Admin page
 
 == Changelog ==
+
+= 1.9.0 =
+* 記事の表示件数に1件、3件を選択することができるようになりました
+* 記事の抜粋の表示文字数を変更しました。
 
 = 1.8.0 =
 * RSSフィードの取得失敗時にエラーメッセージが表示されるようになりました
