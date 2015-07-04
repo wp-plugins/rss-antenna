@@ -1,10 +1,10 @@
 === RSS Antenna ===
-Contributors: WordPress BizPlugin
+Contributors: WP-BizPlugin
 Donate link:
 Tags: rss
-Requires at least: 3.4
-Tested up to: 3.5
-Stable tag: 1.5.0
+Requires at least: 3.5
+Tested up to: 4.2
+Stable tag: 1.9.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,33 @@ RSS Antennaは、他のWebサイトの更新情報をRSSから取得し更新日
 2. Admin page
 
 == Changelog ==
+
+= 1.9.0 =
+* 記事の表示件数に1件、3件を選択することができるようになりました
+* 記事の抜粋の表示文字数を変更しました。
+
+= 1.8.0 =
+* RSSフィードの取得失敗時にエラーメッセージが表示されるようになりました
+
+= 1.7.3 =
+* 広告記事の判定条件を追加しました
+
+= 1.7.2 =
+* サムネイル画像を表示する際の安定性を向上しました
+
+= 1.7.1 =
+* マルチサイトに対応しました
+
+= 1.7.0 =
+* サムネイル画像の表示位置を設定する機能を追加しました
+* 記事へのリンクの選択範囲を拡大しました
+
+= 1.6.0 =
+* サムネイル画像取得時に画像サイズをリサイズ（縮小）する機能を追加しました
+* サムネイル画像の表示サイズを変更しました
+
+= 1.5.1 =
+* サムネイル画像の表示速度を高速化しました
 
 = 1.5.0 =
 * RSS一覧内に重複する記事があれば削除する機能を追加しました
